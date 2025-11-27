@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
+
   lint:
     runs-on: ubuntu-latest
 
@@ -24,27 +25,31 @@ jobs:
       - name: Run lint
         run: ./gradlew lintDebug
 
-      - name: upload html test report
+      - name: Upload lint report
         uses: actions/upload-artifact@v4
         with:
           name: lint-report
           path: app/build/reports/lint-results-debug.html
-unit-test:
-  #lint is a dependency if this
-  needs: [lint]
-  runs-on: ubuntu-latest
-  steps:
-    - name: Check out the code
-      uses: actions/checkout@v4
 
-    - name: Run Tests
-      run: ./gradlew test
+  unit-test:
+    needs: [lint]
+    runs-on: ubuntu-latest
 
-    - name: Upload Test report
-      uses: actions/upload-artifact@v4
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
 
-    - name: unit_test_report
-      path: app/build/reports/tests/testDebugUnitTest/
+      - name: Setup JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
 
-      # our file needs css html and all so we need
-      # this whole folder to save
+      - name: Run Unit Tests
+        run: ./gradlew test
+
+      - name: Upload Unit Test Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/
