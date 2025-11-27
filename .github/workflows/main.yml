@@ -7,19 +7,31 @@ on:
     branches: [master]
   workflow_dispatch:
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout the code
+        run: actions/checkout@v4
+      - name: Run lint
+        run: ./gradlew lintDebug
+      - name: upload html test report
+        uses: actions/upload-artifact@v2
+        with:
+          name: index.html
+          path: app/build/reports/lint-results-debug.html
+  # build:
+  #   runs-on: ubuntu-latest
 
-      - name: Run a one-line script
-        run: echo Hello, world
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: run a two-line script
-        run: |
-          echo Add other actions to build
-          echo test, and deploy your project
+  #     - name: Run a one-line script
+  #       run: echo Hello, world
+
+  #     - name: run a two-line script
+  #       run: |
+  #         echo Add other actions to build
+  #         echo test, and deploy your project
 
   
   
