@@ -6,33 +6,26 @@ on:
   pull_request:
     branches: [master]
   workflow_dispatch:
+
 jobs:
   lint:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
+
+      - name: Setup JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
       - name: Run lint
         run: ./gradlew lintDebug
+
       - name: upload html test report
         uses: actions/upload-artifact@v4
         with:
-          name: index.html
+          name: lint-report
           path: app/build/reports/lint-results-debug.html
-  # build:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-
-  #     - name: Run a one-line script
-  #       run: echo Hello, world
-
-  #     - name: run a two-line script
-  #       run: |
-  #         echo Add other actions to build
-  #         echo test, and deploy your project
-
-  
-  
-  
