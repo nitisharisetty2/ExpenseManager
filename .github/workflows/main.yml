@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
-        run: actions/checkout@v4
+        uses: actions/checkout@v4
       - name: Run lint
         run: ./gradlew lintDebug
       - name: upload html test report
