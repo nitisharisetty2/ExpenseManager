@@ -62,27 +62,43 @@ jobs:
           path: app/build/reports/tests/testDebugUnitTest/
 
 
-  # --------------------------------------------------
+# --------------------------------------------------
   # INSTRUMENTATION TEST JOB (ESPRESSO)
   # --------------------------------------------------
   instrumentation-test:
     needs: [unit-test]
-    runs-on: ubuntu-latest     # <-- Linux = FAST + STABLE emulator
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
 
+      # FIX 1: You MUST setup Java here. Jobs are isolated containers.
+      - name: Setup JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      # FIX 2: Enable KVM permissions. 
+      # This solves the "device not found" / emulator crash on startup.
+      - name: Enable KVM for Android Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Run espresso tests
         uses: reactiveCircus/android-emulator-runner@v2
-        timeout-minutes: 25     # <-- MUST be outside "with"
+        # Increased timeout slightly to account for slow starts
+        timeout-minutes: 30
         with:
           api-level: 29
-          target: default        # <-- FAST system image
-          arch: x86_64           # <-- Works on Linux with hardware accel
-          profile: pixel         # <-- Stable device profile
-          ram-size: 2048M
-          disk-size: 6000M
+          target: default
+          arch: x86_64
+          profile: pixel
+          # Lowered heap slightly to ensure it fits in the runner's RAM alongside Gradle
+          ram-size: 2048M 
           disable-linux-hw-accel: false
           disable-animations: true
           emulator-options: >
@@ -94,6 +110,8 @@ jobs:
 
       - name: Upload Test Report
         uses: actions/upload-artifact@v4
+        if: always() # Ensure report uploads even if tests fail
         with:
           name: instrumentation_test_report
+          path: app/build/reports/androidTests/connected/          
           path: app/build/reports/androidTests/connected/
