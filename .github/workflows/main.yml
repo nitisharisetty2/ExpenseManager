@@ -9,6 +9,9 @@ on:
 
 jobs:
 
+  # --------------------------------------------------
+  # LINT JOB
+  # --------------------------------------------------
   lint:
     runs-on: ubuntu-latest
 
@@ -31,6 +34,10 @@ jobs:
           name: lint-report
           path: app/build/reports/lint-results-debug.html
 
+
+  # --------------------------------------------------
+  # UNIT TEST JOB
+  # --------------------------------------------------
   unit-test:
     needs: [lint]
     runs-on: ubuntu-latest
@@ -54,9 +61,13 @@ jobs:
           name: unit-test-report
           path: app/build/reports/tests/testDebugUnitTest/
 
+
+  # --------------------------------------------------
+  # INSTRUMENTATION TEST JOB (ESPRESSO)
+  # --------------------------------------------------
   instrumentation-test:
     needs: [unit-test]
-    runs-on: macos-latest
+    runs-on: ubuntu-latest     # <-- Linux = FAST + STABLE emulator
 
     steps:
       - name: Checkout the code
@@ -64,17 +75,17 @@ jobs:
 
       - name: Run espresso tests
         uses: reactiveCircus/android-emulator-runner@v2
-        timeout-minutes: 25         # <-- FIXED: must be here
+        timeout-minutes: 25     # <-- MUST be outside "with"
         with:
           api-level: 29
-          target: default
-          arch: x86
-          profile: pixel
+          target: default        # <-- FAST system image
+          arch: x86_64           # <-- Works on Linux with hardware accel
+          profile: pixel         # <-- Stable device profile
           ram-size: 2048M
           disk-size: 6000M
+          disable-linux-hw-accel: false
           disable-animations: true
           emulator-options: >
-            -no-window
             -no-snapshot
             -noaudio
             -no-boot-anim
