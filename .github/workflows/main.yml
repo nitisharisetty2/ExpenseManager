@@ -65,20 +65,20 @@ jobs:
   # --------------------------------------------------
   instrumentation-test:
     needs: [unit-test]
-    runs-on: macos-latest      # macOS recommended for stable emulator
+    runs-on: macos-latest   # More stable emulator boot
 
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
 
+      # Run Espresso tests using fast, stable emulator
       - name: Run espresso tests
-      # Use lightweight API-level 29 emulator
         uses: reactiveCircus/android-emulator-runner@v2
         with:
           api-level: 29
-          target: default           # FAST, stable
+          target: default
           arch: x86
-          profile: Pixel_5          # small & fast
+          profile: pixel                    # <- FIXED (stable device)
           ram-size: 2048M
           disk-size: 6000M
           disable-animations: true
@@ -89,7 +89,7 @@ jobs:
             -no-boot-anim
             -gpu swiftshader_indirect
           script: ./gradlew connectedDebugAndroidTest
-          timeout-minutes: 25       # prevent boot timeout
+          timeout-minutes: 25               # increased timeout
 
       - name: Upload Test Report
         uses: actions/upload-artifact@v4
