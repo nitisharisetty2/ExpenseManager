@@ -9,6 +9,9 @@ on:
 
 jobs:
 
+  # --------------------------------------------------
+  # LINT JOB
+  # --------------------------------------------------
   lint:
     runs-on: ubuntu-latest
 
@@ -30,8 +33,10 @@ jobs:
         with:
           name: lint-report
           path: app/build/reports/lint-results-debug.html
-# number of jobs number of instances
-  # https://chatgpt.com/c/69287d57-1e04-8320-a23f-7709cb8518f5
+
+  # --------------------------------------------------
+  # UNIT TEST JOB
+  # --------------------------------------------------
   unit-test:
     needs: [lint]
     runs-on: ubuntu-latest
@@ -47,7 +52,7 @@ jobs:
           java-version: '11'
 
       - name: Run Unit Tests
-        run: ./gradlew test
+        run: ./gradlew testDebugUnitTest
 
       - name: Upload Unit Test Report
         uses: actions/upload-artifact@v4
@@ -55,24 +60,39 @@ jobs:
           name: unit-test-report
           path: app/build/reports/tests/testDebugUnitTest/
 
-
+  # --------------------------------------------------
+  # INSTRUMENTATION TEST JOB (ESPRESSO)
+  # --------------------------------------------------
   instrumentation-test:
     needs: [unit-test]
-    runs-on: macos-latest
+    runs-on: macos-latest      # macOS recommended for stable emulator
 
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
 
       - name: Run espresso tests
+      # Use lightweight API-level 29 emulator
         uses: reactiveCircus/android-emulator-runner@v2
         with:
           api-level: 29
-          script: ./gradlew connectedCheck
+          target: default           # FAST, stable
+          arch: x86
+          profile: Pixel_5          # small & fast
+          ram-size: 2048M
+          disk-size: 6000M
+          disable-animations: true
+          emulator-options: >
+            -no-window
+            -no-snapshot
+            -noaudio
+            -no-boot-anim
+            -gpu swiftshader_indirect
+          script: ./gradlew connectedDebugAndroidTest
+          timeout-minutes: 25       # prevent boot timeout
 
       - name: Upload Test Report
         uses: actions/upload-artifact@v4
-
         with:
           name: instrumentation_test_report
           path: app/build/reports/androidTests/connected/
