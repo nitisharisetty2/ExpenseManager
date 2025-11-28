@@ -65,7 +65,7 @@ jobs:
   # --------------------------------------------------
   instrumentation-test:
     needs: [unit-test]
-    runs-on: macos-13
+    runs-on: macos-14   # IMPORTANT: macOS 14 is required for stable emulator
 
     steps:
       - name: Checkout Code
@@ -77,21 +77,23 @@ jobs:
           distribution: "temurin"
           java-version: "11"
 
-      - name: Run Espresso Tests on macOS (HARDWARE ACCEL ENABLED)
+      - name: Run Espresso Tests on macOS
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 31
           target: google_apis
           arch: x86_64
           profile: pixel_5
           force-avd-creation: true
           disable-animations: true
-          emulator-options: -no-snapshot
+          emulator-timeout: 600
+          emulator-options: >
+            -no-window -no-snapshot -noaudio -camera-back none
           script: ./gradlew connectedDebugAndroidTest
 
-      - name: Upload Test Report
+      - name: Upload Instrumentation Test Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: instrumentation_test_report
-          path: app/build/reports/androidTests/connected/
+          path: app/build/reports/androidTests/**/*
