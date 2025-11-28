@@ -9,9 +9,6 @@ on:
 
 jobs:
 
-  # --------------------------------------------------
-  # LINT JOB
-  # --------------------------------------------------
   lint:
     runs-on: ubuntu-latest
 
@@ -34,9 +31,6 @@ jobs:
           name: lint-report
           path: app/build/reports/lint-results-debug.html
 
-  # --------------------------------------------------
-  # UNIT TEST JOB
-  # --------------------------------------------------
   unit-test:
     needs: [lint]
     runs-on: ubuntu-latest
@@ -60,25 +54,22 @@ jobs:
           name: unit-test-report
           path: app/build/reports/tests/testDebugUnitTest/
 
-  # --------------------------------------------------
-  # INSTRUMENTATION TEST JOB (ESPRESSO)
-  # --------------------------------------------------
   instrumentation-test:
     needs: [unit-test]
-    runs-on: macos-latest   # More stable emulator boot
+    runs-on: macos-latest
 
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
 
-      # Run Espresso tests using fast, stable emulator
       - name: Run espresso tests
         uses: reactiveCircus/android-emulator-runner@v2
+        timeout-minutes: 25         # <-- FIXED: must be here
         with:
           api-level: 29
           target: default
           arch: x86
-          profile: pixel                    # <- FIXED (stable device)
+          profile: pixel
           ram-size: 2048M
           disk-size: 6000M
           disable-animations: true
@@ -89,7 +80,6 @@ jobs:
             -no-boot-anim
             -gpu swiftshader_indirect
           script: ./gradlew connectedDebugAndroidTest
-          timeout-minutes: 25               # increased timeout
 
       - name: Upload Test Report
         uses: actions/upload-artifact@v4
